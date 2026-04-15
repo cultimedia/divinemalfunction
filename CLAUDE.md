@@ -103,7 +103,7 @@ for voice in response.voices:
 audio_bytes = client.text_to_speech.convert(
     voice_id="YOUR_VOICE_ID",
     text="Text to speak",
-    model_id="eleven_v3",           # Current flagship model
+    model_id="eleven_multilingual_v2",  # V2 required for Professional Voice Clone
     output_format="mp3_44100_128",
     voice_settings={
         "stability": 0.5,           # A take: ~0.65 / B take: ~0.35
@@ -124,9 +124,11 @@ with open("output.mp3", "wb") as f:
 
 | Model | Use case |
 |-------|----------|
-| `eleven_v3` | **Use this** — most expressive, best for scripted narration |
+| `eleven_multilingual_v2` | **Use this** — Required for Professional Voice Clone. V3 produces nasally output with PVC voices. |
+| `eleven_v3` | Newer flagship model, but incompatible with Professional Voice Clone method |
 | `eleven_flash_v2_5` | Fast/cheap, use for testing only |
-| `eleven_multilingual_v2` | Legacy — superseded by v3 |
+
+**Critical:** Keith's voice clones (Keith and Spider) were created using ElevenLabs' **Professional Voice Clone** method, which only works properly with the V2 model. V3 produces unacceptable nasally artifacts with PVC voices. Always use `eleven_multilingual_v2` for this project.
 
 ### Running Phase 1
 

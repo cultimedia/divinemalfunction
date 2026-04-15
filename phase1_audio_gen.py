@@ -62,7 +62,10 @@ VOICE_SETTINGS_B = {
     "use_speaker_boost": True,
 }
 
-MODEL_ID = "eleven_v3"
+# V2 model REQUIRED — Keith's voice clones were created using ElevenLabs'
+# Professional Voice Clone method, which only works properly with V2.
+# V3 produces nasally artifacts with PVC voices. Do not change to V3.
+MODEL_ID = "eleven_multilingual_v2"
 OUTPUT_FORMAT = "mp3_44100_128"
 OUTPUT_DIR = Path("audio/raw")
 RATE_LIMIT_DELAY = 0.75         # seconds between API calls
