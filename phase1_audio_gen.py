@@ -62,10 +62,13 @@ VOICE_SETTINGS_B = {
     "use_speaker_boost": True,
 }
 
-# V2 model REQUIRED — Keith's voice clones were created using ElevenLabs'
-# Professional Voice Clone method, which only works properly with V2.
-# V3 produces nasally artifacts with PVC voices. Do not change to V3.
-MODEL_ID = "eleven_multilingual_v2"
+# Voice-specific model selection — both voices are Professional Voice Clone (PVC),
+# but they respond differently to model versions after testing
+MODEL_MAP = {
+    "keith": "eleven_multilingual_v2",   # V2 required - V3 produces nasally artifacts
+    "spider": "eleven_v3",                # V3 confirmed better - more expressive, cleaner audio
+}
+
 OUTPUT_FORMAT = "mp3_44100_128"
 OUTPUT_DIR = Path("audio/raw")
 RATE_LIMIT_DELAY = 0.75         # seconds between API calls
@@ -116,6 +119,7 @@ def generate_audio(
     client: ElevenLabs,
     text: str,
     voice_id: str,
+    model_id: str,
     voice_settings: dict,
     output_path: Path,
 ) -> bool:
@@ -127,7 +131,7 @@ def generate_audio(
         audio_bytes = client.text_to_speech.convert(
             voice_id=voice_id,
             text=text,
-            model_id=MODEL_ID,
+            model_id=model_id,
             output_format=OUTPUT_FORMAT,
             voice_settings=voice_settings,
         )
@@ -154,7 +158,7 @@ def run(csv_path: str, row_range: Optional[Tuple[int, int]] = None):
     else:
         print(f"Processing {len(df)} lines from {csv_path}\n")
 
-    print(f"Model:  {MODEL_ID}")
+    print(f"Models: Keith → {MODEL_MAP['keith']} | Spider → {MODEL_MAP['spider']}")
     print(f"Output: {OUTPUT_DIR.resolve()}\n")
 
     successes, failures, skipped = 0, 0, 0
@@ -171,16 +175,17 @@ def run(csv_path: str, row_range: Optional[Tuple[int, int]] = None):
         text = row["VoiceOver_Line"]
         voice_label = row["Voice"]
         voice_id = VOICE_MAP[voice_label]
+        model_id = MODEL_MAP[voice_label]
         section = row.get("Section", "")
 
         preview = text[:70] + "..." if len(text) > 70 else text
-        print(f"[{file_num}] {section} | voice: {voice_label}")
+        print(f"[{file_num}] {section} | voice: {voice_label} | model: {model_id}")
         print(f"  \"{preview}\"")
 
         for take_label, settings in [("A", VOICE_SETTINGS_A), ("B", VOICE_SETTINGS_B)]:
             path = OUTPUT_DIR / f"{file_num}_{take_label}.mp3"
             was_existing = path.exists()
-            ok = generate_audio(client, text, voice_id, settings, path)
+            ok = generate_audio(client, text, voice_id, model_id, settings, path)
             if ok and was_existing:
                 skipped += 1
             elif ok:

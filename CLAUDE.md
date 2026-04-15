@@ -99,11 +99,17 @@ response = client.voices.search()
 for voice in response.voices:
     print(voice.voice_id, voice.name)
 
+# Voice-specific model selection
+model_map = {
+    "keith": "eleven_multilingual_v2",   # V2 for Keith (V3 causes nasally artifacts)
+    "spider": "eleven_v3",                # V3 for Spider (better expressiveness)
+}
+
 # Generate audio
 audio_bytes = client.text_to_speech.convert(
     voice_id="YOUR_VOICE_ID",
     text="Text to speak",
-    model_id="eleven_multilingual_v2",  # V2 required for Professional Voice Clone
+    model_id=model_map["keith"],  # Use appropriate model for the voice
     output_format="mp3_44100_128",
     voice_settings={
         "stability": 0.5,           # A take: ~0.65 / B take: ~0.35
@@ -124,11 +130,18 @@ with open("output.mp3", "wb") as f:
 
 | Model | Use case |
 |-------|----------|
-| `eleven_multilingual_v2` | **Use this** — Required for Professional Voice Clone. V3 produces nasally output with PVC voices. |
-| `eleven_v3` | Newer flagship model, but incompatible with Professional Voice Clone method |
+| `eleven_multilingual_v2` | Required for Keith voice — V3 produces nasally artifacts |
+| `eleven_v3` | Required for Spider voice — better expressiveness for the Dr. Spider House persona |
 | `eleven_flash_v2_5` | Fast/cheap, use for testing only |
 
-**Critical:** Keith's voice clones (Keith and Spider) were created using ElevenLabs' **Professional Voice Clone** method, which only works properly with the V2 model. V3 produces unacceptable nasally artifacts with PVC voices. Always use `eleven_multilingual_v2` for this project.
+**Voice-Specific Model Requirements:**
+
+Both Keith and Spider were created using ElevenLabs' **Professional Voice Clone** method, but they respond differently to model versions:
+
+- **Keith voice:** MUST use `eleven_multilingual_v2` — V3 produces unacceptable nasally artifacts
+- **Spider voice:** MUST use `eleven_v3` — better audio quality and expressiveness for the diagnostician persona
+
+The script automatically selects the correct model per voice via the `MODEL_MAP` configuration.
 
 ### Running Phase 1
 
