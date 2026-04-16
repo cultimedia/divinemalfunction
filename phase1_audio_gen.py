@@ -69,6 +69,12 @@ MODEL_MAP = {
     "spider": "eleven_v3",                # V3 confirmed better - more expressive, cleaner audio
 }
 
+# Voice-specific playback speed — 1.0 is normal, 0.9 is 10% slower
+SPEED_MAP = {
+    "keith": 0.9,    # 10% slower for better clarity and pacing
+    "spider": 1.0,   # Normal speed for Dr. Spider House diagnostic delivery
+}
+
 OUTPUT_FORMAT = "mp3_44100_128"
 OUTPUT_DIR = Path("audio/raw")
 RATE_LIMIT_DELAY = 0.75         # seconds between API calls
@@ -159,6 +165,7 @@ def run(csv_path: str, row_range: Optional[Tuple[int, int]] = None):
         print(f"Processing {len(df)} lines from {csv_path}\n")
 
     print(f"Models: Keith → {MODEL_MAP['keith']} | Spider → {MODEL_MAP['spider']}")
+    print(f"Speed:  Keith → {SPEED_MAP['keith']}x | Spider → {SPEED_MAP['spider']}x")
     print(f"Output: {OUTPUT_DIR.resolve()}\n")
 
     successes, failures, skipped = 0, 0, 0
@@ -176,16 +183,19 @@ def run(csv_path: str, row_range: Optional[Tuple[int, int]] = None):
         voice_label = row["Voice"]
         voice_id = VOICE_MAP[voice_label]
         model_id = MODEL_MAP[voice_label]
+        speed = SPEED_MAP[voice_label]
         section = row.get("Section", "")
 
         preview = text[:70] + "..." if len(text) > 70 else text
-        print(f"[{file_num}] {section} | voice: {voice_label} | model: {model_id}")
+        print(f"[{file_num}] {section} | voice: {voice_label} | model: {model_id} | speed: {speed}x")
         print(f"  \"{preview}\"")
 
         for take_label, settings in [("A", VOICE_SETTINGS_A), ("B", VOICE_SETTINGS_B)]:
+            # Merge speed into voice settings for this voice
+            settings_with_speed = {**settings, "speed": speed}
             path = OUTPUT_DIR / f"{file_num}_{take_label}.mp3"
             was_existing = path.exists()
-            ok = generate_audio(client, text, voice_id, model_id, settings, path)
+            ok = generate_audio(client, text, voice_id, model_id, settings_with_speed, path)
             if ok and was_existing:
                 skipped += 1
             elif ok:
